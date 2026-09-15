@@ -1,0 +1,3 @@
+- Saved agent-ready report pack at artifacts/report-pack-2026-09-03/ and artifacts/report-pack-2026-09-03.zip; 14 arXiv PDFs in report-pack-2026-09-03/papers/ [2026-09-03]
+- Pack covers user-supplied AppSec URLs (ActiveScan++, CSPBypass, Caido Scanner, OWASP Automated Threats v1.3, ModSecurity v3.0.16, official CRS vs fabiocicerchia fork, virtual patching) plus AISLE curl CVE article and X AI-paper pulse [2026-09-03]
+- Convention: official CRS is coreruleset/coreruleset; do not pin fabiocicerchia/OWASP-CRS [2026-09-03]

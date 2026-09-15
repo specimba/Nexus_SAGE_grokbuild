@@ -1,0 +1,38 @@
+{
+  "url": "http://127.0.0.1:8081/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "NEXUS SAGE",
+      "hasCanvas": false,
+      "bodyTextLen": 6676,
+      "bodyTextHash": "a760bd9a072159cf94177e424c821227515322f72308f31df88cbec2361e8099",
+      "bodyTextPrefix": "Skip to briefing λ NEXUS SAGE News digest --:--:--Z EDITION LIVE",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "NEXUS SAGE",
+      "hasCanvas": false,
+      "bodyTextLen": 6425,
+      "bodyTextHash": "15b8a9b13a2b600e5e4392802d7dbc8a17cb5a3e83ed829072b017b3cd1dc693",
+      "bodyTextPrefix": "Skip to briefing λ NEXUS SAGE News digest EDITION LIVE BRIEFING ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-built.json",
+  "divergesFromBaseline": false,
+  "baselineReasons": []
+}
