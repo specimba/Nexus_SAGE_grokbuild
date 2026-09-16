@@ -7,11 +7,11 @@ import { CRAWL } from "../data/x-crawl.ts";
 import { keepPaper } from "./keep.ts";
 
 describe("edition pipeline", () => {
-  it("snapshot ingest names seven sources and no filing codes", () => {
+  it("snapshot ingest names eight sources and no filing codes", () => {
     const logs = snapshotIngest("2026-09-15T07:10:00Z");
     assert.deepEqual(
       logs.map((s) => s.id),
-      ["metr", "wire", "hf", "tracker", "x", "mail", "bookmarks"],
+      ["metr", "wire", "hf", "tracker", "hn", "x", "mail", "bookmarks"],
     );
     assert.ok(logs.every((s) => !/briefEligible|unlock|cycle 003/i.test(s.note)));
     assert.equal(logs.find((s) => s.id === "x")?.live, false);
@@ -35,7 +35,13 @@ describe("edition pipeline", () => {
     const may = ranked.find((p) => p.id === "2099486849492299901");
     assert.equal(rsi?.tag, "rumor");
     assert.equal(may?.tag, "rumor");
-    const ed = compileDigest({ crawl: CRAWL, at: "2026-09-15T07:10:00Z" });
+    const cover = ranked.find((p) => p.id === "2099854817476874703");
+    assert.equal(cover?.tag, "rest");
+    const apollo = ranked.find((p) => p.id === "2099611707194699971");
+    assert.equal(apollo?.tag, "rest");
+    const anthropic = ranked.find((p) => p.id === "2098097512544444447");
+    assert.equal(anthropic?.tag, "rest");
+    const ed = compileDigest({ crawl: CRAWL, at: "2026-09-15T14:20:00Z" });
     assert.ok(ed.rumors.some((p) => p.id === "2099689666924683393"));
     assert.equal(ed.lead.id, "hf-swarm");
   });

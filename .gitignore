@@ -3,3 +3,5 @@ node_modules/
 .github_repo
 .env
 .env.*
+artifacts/sage/packs/
+artifacts/browsed_files/

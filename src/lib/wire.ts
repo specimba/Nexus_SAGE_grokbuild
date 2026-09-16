@@ -18,8 +18,10 @@ export type WireStory = {
 
 const MAX_AGE_MS = 21 * 24 * 60 * 60 * 1000;
 const EVAL_DESKS = new Set(["Redwood", "Alignment Forum", "AI Snake Oil", "Transformer", "UK AISI", "Import AI", "Epoch", "Zvi"]);
+const SECURITY_DESKS = new Set(["Trail of Bits", "Fox-IT", "Hugging Face", "Project Zero"]);
+const DESK_BUMP = new Set([...EVAL_DESKS, ...SECURITY_DESKS]);
 
-const FEEDS: { name: string; url: string; kind: "atom" | "rss"; titlesOnly?: boolean; timeout?: number }[] = [
+const FEEDS: { name: string; url: string; kind: "atom" | "rss"; titlesOnly?: boolean; timeout?: number; max?: number }[] = [
   { name: "HuggingNews", url: "https://huggingnews.com/feed.xml", kind: "atom" },
   { name: "Alignment Forum", url: "https://www.alignmentforum.org/feed.xml", kind: "rss" },
   { name: "Transformer", url: "https://www.transformernews.ai/feed", kind: "rss" },
@@ -29,6 +31,9 @@ const FEEDS: { name: string; url: string; kind: "atom" | "rss"; titlesOnly?: boo
   { name: "Epoch", url: "https://epochai.substack.com/feed", kind: "rss", titlesOnly: true },
   { name: "Zvi", url: "https://thezvi.substack.com/feed", kind: "rss", titlesOnly: true, timeout: 12000 },
   { name: "OpenAI", url: "https://openai.com/news/rss.xml", kind: "rss", titlesOnly: true },
+  { name: "Trail of Bits", url: "https://blog.trailofbits.com/feed/", kind: "rss", max: 12 },
+  { name: "Fox-IT", url: "https://blog.fox-it.com/feed/", kind: "rss", max: 8, timeout: 8000 },
+  { name: "Hugging Face", url: "https://huggingface.co/blog/feed.xml", kind: "rss", titlesOnly: true, max: 12 },
 ];
 
 function decode(s: string) {
@@ -72,6 +77,9 @@ function toIso(raw: string) {
 function keepEvalDesk(outlet: string, title: string, summary: string) {
   const t = `${title} ${summary}`;
   if (keepWire(title, summary, outlet)) return true;
+  if (SECURITY_DESKS.has(outlet)) {
+    return /llm|language model|agent|eval|sandbox|incident|ai safety|prompt inject|jailbreak|model/i.test(t);
+  }
   if (!EVAL_DESKS.has(outlet)) return false;
   if (/gdp statistics|nvidia-sized hole|music v2|voice price/i.test(t)) return false;
   return /brief|benchmark|compute|capability|horizon|rsi|eval|incident|agent|metr|pace the frontier|oversight|monitor/i.test(t);
@@ -79,9 +87,10 @@ function keepEvalDesk(outlet: string, title: string, summary: string) {
 
 function storyOf(title: string, summary: string, href: string, at: string, id: string, outlet: string): WireStory | null {
   if (!title) return null;
-  let verdict = rankClaim(`${title} ${summary}`);
-  if (verdict.rank === "unconfirmed" && EVAL_DESKS.has(outlet)) {
-    verdict = { rank: "also", reason: "Eval-desk writing. Not a rumor — and not a replacement for the lead." };
+  const hay = outlet === "HuggingNews" || outlet === "OpenAI" || outlet === "Hugging Face" ? title : `${title} ${summary}`;
+  let verdict = rankClaim(hay);
+  if (verdict.rank === "unconfirmed" && DESK_BUMP.has(outlet)) {
+    verdict = { rank: "also", reason: SECURITY_DESKS.has(outlet) ? "Security lab. Digest ref — not a replacement for the lead." : "Eval-desk writing. Not a rumor — and not a replacement for the lead." };
   }
   return {
     id: id || href || title,
@@ -93,6 +102,7 @@ function storyOf(title: string, summary: string, href: string, at: string, id: s
     rank: tagFromRank(verdict.rank),
     reason: verdict.reason,
     outlet,
+    beat: SECURITY_DESKS.has(outlet) ? "security" : undefined,
   };
 }
 
@@ -112,8 +122,8 @@ function capPerOutlet(stories: WireStory[], n: number) {
   });
 }
 
-export function parseAtom(xml: string, outlet = "HuggingNews"): WireStory[] {
-  const chunks = xml.split(/<entry[\s>]/i).slice(1);
+export function parseAtom(xml: string, outlet = "HuggingNews", max = 24): WireStory[] {
+  const chunks = xml.split(/<entry[\s>]/i).slice(1, max + 1);
   const stories = chunks
     .map((raw) => {
       const block = raw.split(/<\/entry>/i)[0] ?? raw;
@@ -130,8 +140,8 @@ export function parseAtom(xml: string, outlet = "HuggingNews"): WireStory[] {
   return fresh(stories);
 }
 
-export function parseRss(xml: string, outlet: string, titlesOnly = false): WireStory[] {
-  const chunks = xml.split(/<item[\s>]/i).slice(1);
+export function parseRss(xml: string, outlet: string, titlesOnly = false, max = 24): WireStory[] {
+  const chunks = xml.split(/<item[\s>]/i).slice(1, max + 1);
   const stories = chunks
     .map((raw) => {
       const block = raw.split(/<\/item>/i)[0] ?? raw;
@@ -147,13 +157,14 @@ async function fetchFeed(feed: (typeof FEEDS)[number]): Promise<{ stories: WireS
   const t0 = Date.now();
   try {
     const r = await fetch(feed.url, {
-      headers: { Accept: "application/atom+xml, application/rss+xml, application/xml, text/xml" },
+      headers: { Accept: "application/atom+xml, application/rss+xml, application/xml, text/xml", "User-Agent": "NEXUS-SAGE-desk/0.2 (free-ingest)" },
       signal: AbortSignal.timeout(feed.timeout ?? 8000),
     });
     const ms = Date.now() - t0;
     if (!r.ok) return { stories: [], ok: false, ms };
     const xml = await r.text();
-    const stories = feed.kind === "atom" ? parseAtom(xml, feed.name) : parseRss(xml, feed.name, feed.titlesOnly);
+    const max = feed.max ?? 24;
+    const stories = feed.kind === "atom" ? parseAtom(xml, feed.name, max) : parseRss(xml, feed.name, feed.titlesOnly, max);
     return { stories, ok: stories.length > 0, ms };
   } catch {
     return { stories: [], ok: false, ms: Date.now() - t0 };
@@ -170,7 +181,7 @@ export async function loadWires(): Promise<{ stories: WireStory[]; ok: boolean; 
         if (a.keep !== b.keep) return a.keep ? -1 : 1;
         return Date.parse(b.at) - Date.parse(a.at);
       }),
-    6,
+    4,
   );
   const ok = packs.some((p) => p.ok);
   const kept = stories.filter((s) => s.keep);

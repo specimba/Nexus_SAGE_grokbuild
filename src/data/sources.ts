@@ -25,7 +25,7 @@ export const SOURCE_CARD: SourceCard[] = [
     href: "https://huggingnews.com/",
     role: "wire",
     live: true,
-    note: "Atom feed written from X, filings, papers. Through the day. Not a lab primary — we still rank.",
+    note: "Atom feed written from X, filings, papers. Through the day. Not a lab primary — we still rank. A headline that merely names Astra does not keep.",
   },
   {
     id: "eval-desks",
@@ -36,12 +36,20 @@ export const SOURCE_CARD: SourceCard[] = [
     note: "Alignment Forum, Transformer, Redwood, AI Snake Oil, Import AI, Epoch, Zvi, UK AISI. Titles-only on the long Substacks. Last 21 days unless named.",
   },
   {
+    id: "security",
+    name: "Security RSS",
+    href: "https://blog.trailofbits.com/",
+    role: "wire",
+    live: true,
+    note: "Trail of Bits, Fox-IT, Hugging Face blog. Digest refs. Never the lead. Exploit how-to does not keep.",
+  },
+  {
     id: "hf",
     name: "Hugging Face daily papers",
     href: "https://huggingface.co/papers",
     role: "primary",
     live: true,
-    note: "Keep is not upvote. Agent-security stays at 1 upvote.",
+    note: "Keep is not upvote. Agent-security stays at 1 upvote. arXiv Atom fills missing abstracts.",
   },
   {
     id: "tracker",
@@ -49,7 +57,15 @@ export const SOURCE_CARD: SourceCard[] = [
     href: "https://ai-tracker.ssh.codes/",
     role: "tracker",
     live: true,
-    note: "First-hand model and docs diffs. Leaderboard ticks are noise.",
+    note: "First-hand model and docs diffs. Leaderboard ticks are noise. Tracker never becomes a briefing card.",
+  },
+  {
+    id: "hn",
+    name: "Hacker News",
+    href: "https://hn.algolia.com/",
+    role: "tracker",
+    live: true,
+    note: "Algolia Pulse. Rotating watchlist, three queries a tick. Chatter only — never the briefing, never the lead.",
   },
   {
     id: "x",
@@ -57,7 +73,7 @@ export const SOURCE_CARD: SourceCard[] = [
     href: "https://x.com/AndrewCurran_",
     role: "snapshot",
     live: false,
-    note: "Curran-class accounts. No paid firehose. Ranked on compile.",
+    note: "Curran-class snapshot, 16 Sep morning. Aaronson/Brockman millennium rumors, RSI rumor, Apollo embedded-evaluator pledge. No paid firehose. Ranked on compile.",
   },
   {
     id: "mail",
@@ -65,7 +81,7 @@ export const SOURCE_CARD: SourceCard[] = [
     href: "https://www.theinformation.com/",
     role: "mail",
     live: false,
-    note: "The Information, Axios AI+, AlphaSignal, BenchLM Radar, Hugging Face digest.",
+    note: "The Information, Axios AI+, 404 Media, Hugging Face digest. Snapshot from the connected inbox. Ranked on compile.",
   },
   {
     id: "bookmarks",

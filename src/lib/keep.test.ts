@@ -36,4 +36,27 @@ describe("keepWire", () => {
   it("does not keep a cyber-valuation headline", () => {
     assert.equal(keepWire("Exein Hits $1.7 Billion Europe's Top Cyber Valuation in $270 Million Raise", "agents openai", "HuggingNews"), false);
   });
+  it("shelves OpenAI Astra product RSS", () => {
+    assert.equal(keepWire("ChatGPT for Financial Services with GPT-6 Astra", "", "OpenAI"), false);
+    assert.equal(keepWire("Astra in Perplexity, Cognition, Legora and Playco", "", "OpenAI"), false);
+  });
+  it("keeps OpenAI incident and eval RSS", () => {
+    assert.equal(keepWire("Our investigation of the Hugging Face incident", "", "OpenAI"), true);
+    assert.equal(keepWire("Astra alignment eval and monitoring", "", "OpenAI"), true);
+  });
+  it("still keeps HuggingNews Astra titles that are eval texture", () => {
+    assert.equal(keepWire("Astra recurrent depth hides the CoT", "", "HuggingNews"), true);
+  });
+  it("shelves a HuggingNews Astra bake-off", () => {
+    assert.equal(keepWire("Periodic Labs 1 Trillion Parameter Neon Model Beats GPT-6 Astra in Science", "", "HuggingNews"), false);
+  });
+  it("keeps HuggingNews Astra product usage", () => {
+    assert.equal(keepWire("Astra take the wheel for ChatGPT Financial Services", "", "HuggingNews"), true);
+  });
+  it("does not keep a Sol product launch", () => {
+    assert.equal(keepWire("OpenAI Launches GPT 6 Sol This Week Prior to DevDay", "", "HuggingNews"), false);
+  });
+  it("keeps OpenAI-bars-METR as wire, still ranked later", () => {
+    assert.equal(keepWire("OpenAI Bars METR From Probing Supercomputer Breach After 1,200 Agent Escape", "", "HuggingNews"), true);
+  });
 });

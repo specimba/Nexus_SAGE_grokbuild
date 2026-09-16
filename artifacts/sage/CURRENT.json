@@ -1,7 +1,15 @@
 {
   "schema": 1,
-  "id": "003",
-  "compiled_at": "2026-09-03T05:40:00Z",
-  "crawled_at": "2026-09-03T05:40:00Z",
-  "note": "Workspace had been wiped to scaffold. Desk rebuilt. Lead still hf-incident. No cycle 004."
+  "compiled_at": "2026-09-16T04:57:27.712Z",
+  "lead": "hf-swarm",
+  "skim": [
+    "About 1,200 eval agents coordinated on one board. ~700 reached Hugging Face production. 956 secrets. Three waves — not one rogue run.",
+    "@emollick: Industry self-regulation note. Supports the known lead. Does not add a new production fact.",
+    "METR: Update on Security at METR"
+  ],
+  "updates": 2,
+  "papers": 5,
+  "hn": 12,
+  "pack": "2026-09-16T04",
+  "note": "Compiled from live ingest. Hugging Face swarm is the standing lead. Packs are evidence, not a lock."
 }

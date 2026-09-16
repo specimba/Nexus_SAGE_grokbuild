@@ -70,7 +70,7 @@
   position: absolute;
   inset: 0;
   background: url("/hud-rain-dark.jpg") center / cover no-repeat;
-  opacity: 0.22;
+  opacity: 0.1;
   pointer-events: none;
   mix-blend-mode: screen;
 }
@@ -111,7 +111,7 @@
   .desk-ticker {
     display: none;
   }
-  header .desk-lane-btn:not(.lock-cta) {
+  header .desk-lane-btn:not(.desk-cta) {
     display: none;
   }
 }
@@ -162,41 +162,31 @@
   color: color-mix(in oklab, var(--color-accent-fg) 70%, transparent);
 }
 
-.lock-seal {
+.live-pill {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  min-height: 44px;
+  min-height: 36px;
   padding: 0 0.7rem;
-  border: 1px solid color-mix(in oklab, var(--color-ok) 50%, var(--color-line));
-  background: color-mix(in oklab, var(--color-ok) 10%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-ok) 45%, var(--color-line));
+  background: color-mix(in oklab, var(--color-ok) 8%, transparent);
   color: var(--color-ok);
   font-family: var(--font-mono);
   font-size: var(--text-kicker);
   letter-spacing: var(--tracking-kicker);
   text-transform: uppercase;
-  text-align: left;
 }
-.lock-seal:hover {
-  border-color: var(--color-ok);
-}
-.lock-dot {
-  width: 8px;
-  height: 8px;
+.live-dot {
+  width: 7px;
+  height: 7px;
   border-radius: 999px;
   background: var(--color-ok);
   box-shadow: 0 0 8px var(--color-ok);
 }
-.lock-cta {
+.desk-cta {
   color: var(--color-accent-fg) !important;
   background: var(--color-accent) !important;
   border-color: var(--color-accent) !important;
-}
-.lock-drawer {
-  width: min(28rem, 94vw);
-  max-height: 82vh;
-  overflow: auto;
-  margin-top: 6vh;
 }
 
 .cmd-overlay {
@@ -226,13 +216,8 @@
 }
 
 .hazard-bar {
-  height: 6px;
-  background: repeating-linear-gradient(
-    -45deg,
-    var(--color-accent) 0 10px,
-    #1a1204 10px 20px
-  );
-  box-shadow: 0 0 12px color-mix(in oklab, var(--color-accent) 40%, transparent);
+  height: 3px;
+  background: var(--color-accent);
 }
 
 .scanline {
@@ -545,7 +530,7 @@
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  min-height: 22rem;
+  min-height: 0;
   border: 1px solid var(--color-line);
   background: var(--color-bg-deep);
 }
@@ -556,8 +541,8 @@
   height: 100%;
   object-fit: cover;
   object-position: center;
-  opacity: 0.42;
-  filter: saturate(0.85) contrast(1.1);
+  opacity: 0.22;
+  filter: saturate(0.7) contrast(1.05);
 }
 .story-hero::after {
   content: "";
@@ -580,11 +565,11 @@
 }
 .story-mast {
   font-family: var(--font-sans);
-  font-size: clamp(1.85rem, 1.2rem + 2.4vw, 3.15rem);
+  font-size: clamp(1.65rem, 1.1rem + 1.8vw, 2.6rem);
   font-weight: 700;
   letter-spacing: -0.03em;
-  line-height: 1.12;
-  max-width: 16ch;
+  line-height: 1.14;
+  max-width: 22ch;
   color: var(--color-fg);
   text-wrap: balance;
 }
@@ -901,27 +886,20 @@
   color: var(--color-fg);
 }
 
-.voice-progress {
-  position: relative;
-  display: block;
+.script-line {
   width: 100%;
-  height: 12px;
-  padding: 0;
-  border: 1px solid var(--color-line);
-  background: color-mix(in oklab, var(--color-bg-deep) 80%, black);
+  padding: 0.85rem 1rem;
+  text-align: left;
+  border: 1px solid transparent;
+  background: transparent;
+  min-height: 44px;
 }
-.voice-progress > span {
-  display: block;
-  height: 100%;
-  background: linear-gradient(90deg, var(--color-amber), var(--color-cyan));
+.script-line[data-active="true"] {
+  border-color: color-mix(in oklab, var(--color-cyan) 35%, var(--color-line));
+  background: color-mix(in oklab, var(--color-cyan) 6%, var(--color-surface));
 }
-.voice-mark {
-  position: absolute;
-  top: -3px;
-  width: 2px;
-  height: 18px;
-  background: var(--color-cyan);
-  pointer-events: none;
+.script-line:hover {
+  border-color: color-mix(in oklab, var(--color-accent) 35%, var(--color-line));
 }
 
 .desk-focus .skim li p,
@@ -987,6 +965,29 @@
 .metr-feature .adhd-grid {
   margin-top: 0;
 }
+.deadline-card {
+  border-color: color-mix(in oklab, var(--color-hazard) 48%, var(--color-line));
+  background: color-mix(in oklab, var(--color-hazard) 8%, var(--color-surface));
+}
+.story-hit[data-kind="lead"] {
+  border-left: 3px solid var(--color-hazard);
+}
+.story-hit[data-kind="update"],
+.story-hit[data-kind="addendum"] {
+  border-left: 3px solid var(--color-amber);
+}
+.story-hit[data-kind="related"],
+.story-hit[data-kind="companion"] {
+  border-left: 3px solid var(--color-cyan);
+}
+.story-hit[data-kind="also"],
+.story-hit[data-kind="rest"] {
+  border-left: 3px solid var(--color-subtle);
+}
+.story-hit[data-kind="rumor"],
+.story-hit[data-kind="drop"] {
+  border-left: 3px solid color-mix(in oklab, var(--color-subtle) 50%, black);
+}
 .wire-row {
   display: grid;
   grid-template-columns: 7.25rem minmax(0, 1fr);
@@ -1011,6 +1012,66 @@
 }
 .wire-row a:hover {
   color: var(--color-cyan);
+}
+.brief-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+@media (max-width: 900px) {
+  .brief-pair {
+    grid-template-columns: 1fr;
+  }
+}
+.hit-row {
+  display: grid;
+  grid-template-columns: 6.75rem minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.75rem 0.85rem;
+  text-align: left;
+  border: 1px solid var(--color-line);
+  background: color-mix(in oklab, var(--color-surface) 92%, black);
+  color: inherit;
+}
+@media (max-width: 640px) {
+  .hit-row {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+}
+.hit-row:hover {
+  border-color: color-mix(in oklab, var(--color-accent) 45%, var(--color-line));
+}
+.hit-row strong {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--color-fg);
+}
+.hit-row em {
+  display: block;
+  margin-top: 0.25rem;
+  font-style: normal;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--color-muted);
+}
+.desk-focus .wire-block,
+.desk-focus .paper-strip,
+.desk-focus .also-today {
+  display: none;
+}
+.voice-doc {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 .skel-on {
   background: linear-gradient(

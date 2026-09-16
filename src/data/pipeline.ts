@@ -7,12 +7,9 @@ export type Stage = {
   note: string;
 };
 
-export const PIPE_AT = "2026-09-15T07:10:00Z";
-export const PIPE_CADENCE = "6h";
-
 export const STAGES: Stage[] = [
-  { id: "ingest", label: "Ingest", status: "ok", note: "METR security · HuggingNews · Epoch · papers · tracker · X snapshot" },
-  { id: "rank", label: "Rank", status: "ok", note: "Incident > product > rumor. Keep ≠ upvote." },
-  { id: "brief", label: "Edition", status: "ok", note: "90-second brief + stories" },
-  { id: "voice", label: "Listen", status: "ok", note: "Eve and Orion · 14 Sep tape" },
+  { id: "ingest", label: "Ingest", status: "ok", note: "Live METR / wire / papers / tracker / HN · snapshot X / mail" },
+  { id: "rank", label: "Rank", status: "ok", note: "Incident > product > rumor. Keep ≠ upvote. HN never briefs." },
+  { id: "brief", label: "Edition", status: "ok", note: "Compiled from this pull · written to disk" },
+  { id: "voice", label: "Read aloud", status: "ok", note: "Browser voice reads this edition" },
 ];

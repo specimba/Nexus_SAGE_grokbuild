@@ -1,4 +1,4 @@
-export const WATCH_AT = "2026-09-15T10:30:00Z";
+export const WATCH_AT = "2026-09-16T02:20:00Z";
 
 /** Accounts first. Tags come from the post, not a frozen topic list. */
 export const WATCH_ACCOUNTS = [

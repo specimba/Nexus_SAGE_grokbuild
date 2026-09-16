@@ -41,7 +41,7 @@ describe("HuggingNews wire", () => {
     assert.equal(stories[1]!.keep, false);
   });
   it("does not promote a math-swarm story to the lead even if it names Hugging Face", () => {
-    const r = rankClaim("OpenAI Solves Navier Stokes with 10,000 AI Agents. In a failure at Hugging Face, agents participated in harmful behavior.");
+    const r = rankClaim("OpenAI Solves Navier-Stokes with 10,000 AI Agents. In a failure at Hugging Face, agents participated in harmful behavior.");
     assert.equal(r.rank, "also");
   });
   it("keeps eval texture and shelves stocks", () => {
@@ -93,24 +93,22 @@ describe("RSS desks", () => {
     assert.equal(stories.find((s) => /GDP/.test(s.title))?.keep, false);
     assert.equal(stories[0]!.summary, "");
   });
-  it("keeps Zvi titles-only on this desk’s beat and does not store the body", () => {
+  it("keeps a Trail of Bits agent-toolchain post and does not call it a rumor", () => {
     const stories = parseRss(
       `<?xml version="1.0"?><rss><channel>
-        <item><title>We Must Pace The Frontier</title>
-        <link>https://thezvi.substack.com/p/pace</link>
-        <pubDate>Mon, 08 Sep 2026 12:00:00 GMT</pubDate>
-        <description>${"x".repeat(4000)}</description></item>
-        <item><title>Brand New AI Solves a Millennium Prize</title>
-        <link>https://thezvi.substack.com/p/prize</link>
-        <pubDate>Sun, 07 Sep 2026 12:00:00 GMT</pubDate>
-        <description>long body</description></item>
+        <item>
+          <title>Auditing agent toolchains for supply-chain risk</title>
+          <link>https://blog.trailofbits.com/2026/09/02/auditing-agent-toolchains/</link>
+          <pubDate>Tue, 02 Sep 2026 14:00:00 GMT</pubDate>
+          <description>How we review agentic code assistants for supply-chain risk.</description>
+        </item>
       </channel></rss>`,
-      "Zvi",
-      true,
+      "Trail of Bits",
     );
-    assert.equal(stories.find((s) => /Pace The Frontier/.test(s.title))?.keep, true);
-    assert.equal(stories.find((s) => /Millennium Prize/.test(s.title))?.keep, false);
-    assert.ok(stories.every((s) => s.summary === ""));
+    assert.equal(stories[0]!.keep, true);
+    assert.notEqual(stories[0]!.rank, "rumor");
+    assert.equal(stories[0]!.beat, "security");
+    assert.equal(stories[0]!.outlet, "Trail of Bits");
   });
 });
 

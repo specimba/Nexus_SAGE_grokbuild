@@ -6,9 +6,16 @@ export type MailHit = {
   at: string;
 };
 
-export const MAIL_AT = "2026-09-15T10:30:00Z";
+export const MAIL_AT = "2026-09-16T01:10:00Z";
 
 export const MAIL: MailHit[] = [
+  {
+    id: "hf-daily-15sep",
+    from: "Hugging Face",
+    subject: "Daily papers of 15 Sep 2026",
+    take: "Board mail. Vidu S2 led on upvotes. Atria Dawn still shelves. We keep by beat, not upvote.",
+    at: "2026-09-16T01:01:08Z",
+  },
   {
     id: "ti-noam-brown",
     from: "The Information",
@@ -17,25 +24,32 @@ export const MAIL: MailHit[] = [
     at: "2026-09-15T01:10:06Z",
   },
   {
-    id: "hf-daily-14sep",
-    from: "Hugging Face",
-    subject: "Daily papers of 14 Sep 2026",
-    take: "Board mail. We keep by beat, not upvote. HazardAuditor and the backdoor paper stay; Atria Dawn shelves.",
-    at: "2026-09-15T01:01:02Z",
+    id: "ti-ms-killswitch",
+    from: "The Information",
+    subject: "Microsoft Joins Calls for AI “Pacing,” Pledges to Build Kill Switches Into AI Products",
+    take: "Kill-switch pledge plus the pacing chorus. Same control class as the swarm — not a Hugging Face update.",
+    at: "2026-09-15T11:15:16Z",
   },
   {
-    id: "axios-slowing",
+    id: "axios-dreamland",
     from: "Axios AI+",
-    subject: "Slowing it down",
-    take: "Ina Fried on the pacing chorus. Recap of Amodei/Altman. Pair with the essay, not the swarm.",
-    at: "2026-09-14T13:28:23Z",
+    subject: "AI in Dreamland · Trust deficit",
+    take: "Ina Fried on trust. Recap. Pair with Amodei/Altman, not the swarm.",
+    at: "2026-09-15T13:28:24Z",
   },
   {
-    id: "benchlm-radar-14sep",
-    from: "BenchLM Radar",
-    subject: "Radar Brief (Sep 14): OpenAI model update: pricing +4 more",
-    take: "Five confirmed model/docs changes and three service incidents. Tracker class. Not a production escape.",
-    at: "2026-09-14T13:04:39Z",
+    id: "four04-agents",
+    from: "404 Media",
+    subject: "There’s a 100% Chance AI Agents Are Already Ruining the Internet",
+    take: "Agents as a nuisance class. Inbox texture. Not a lab primary and not a fourth wave.",
+    at: "2026-09-15T14:32:46Z",
+  },
+  {
+    id: "techstrong-jfrog",
+    from: "Techstrong Brief",
+    subject: "JFrog Bugs Stay Under Attack, Anthropic Lands $13.7B Compute Deal",
+    take: "Artifactory remaining under attack is the same mailbox class as wave 1. Not Hugging Face attribution. Anthropic compute is commercial.",
+    at: "2026-09-15T15:37:15Z",
   },
   {
     id: "secblvd-privileged",
@@ -59,13 +73,6 @@ export const MAIL: MailHit[] = [
     at: "2026-09-14T16:21:03Z",
   },
   {
-    id: "heise-ki",
-    from: "heise KI-Update",
-    subject: "KI-Entwicklung, Claude-Missbrauch, Mathe-Forschung, Deepfakes",
-    take: "Daily German wire. Claude misuse + math-agent research. Inbox.",
-    at: "2026-09-14T13:46:11Z",
-  },
-  {
     id: "thn-rogue",
     from: "The Hacker News",
     subject: "Twitch OAuth Leak, Passkey Phishing Trap, Rogue OpenAI Agents and More",
@@ -80,31 +87,10 @@ export const MAIL: MailHit[] = [
     at: "2026-09-14T13:57:13Z",
   },
   {
-    id: "alphasignal-prompts",
-    from: "AlphaSignal",
-    subject: "OpenAI: trim bloated prompts, ElevenLabs rival ships free voice clone",
-    take: "Tooling note. Inbox only.",
-    at: "2026-09-14T13:30:15Z",
-  },
-  {
-    id: "innermost-slow",
-    from: "The Innermost Loop",
-    subject: "Welcome to September 13, 2026",
-    take: "A formal request to slow the frontier, from people building it. Pair with Amodei’s essay. Off the front page.",
-    at: "2026-09-13T22:10:10Z",
-  },
-  {
     id: "ti-safety-body",
     from: "The Information",
     subject: "Anthropic, OpenAI, Google Quietly Discussed AI Safety Standards Body",
     take: "Labs talking a standards body. Pattern. Not a Hugging Face addendum.",
     at: "2026-09-13T20:06:59Z",
-  },
-  {
-    id: "ti-briefing-stocks",
-    from: "The Information",
-    subject: "The Briefing: Software Stocks Gain on AI Slowdown Talk",
-    take: "Market recap of the pacing chorus. Not a production fact. Pair with Amodei and Russell — do not brief as news.",
-    at: "2026-09-15T00:04:51Z",
   },
 ];
