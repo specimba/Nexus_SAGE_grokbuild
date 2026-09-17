@@ -1,11 +1,11 @@
 {
   "schema": 1,
-  "compiled_at": "2026-09-17T20:32:30.717Z",
+  "compiled_at": "2026-09-17T20:48:04.245Z",
   "lead": "hf-swarm",
   "skim": [
-    "HuggingNews: Raindrop Raises $50 Million Series A For AI Agent Simulation Tools",
+    "HuggingNews: Goodfire AI Cuts LLM Monitoring Cost 90% to Block AI Reward Hacking",
     "METR: Update on Security at METR",
-    "HuggingNews: Goodfire AI Cuts LLM Monitoring Cost 90% to Block AI Reward Hacking"
+    "OpenAI: Our framework for reporting model misalignment"
   ],
   "updates": 1,
   "papers": 6,

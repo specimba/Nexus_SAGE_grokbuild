@@ -177,6 +177,12 @@ function young(at: string, now: number) {
   return !Number.isFinite(t) || now - t <= UPDATE_FRESH_MS;
 }
 
+const SKIM_BEAT_RE = /sandbox|incident|escape|metr|hack|harness|eval|monitor|align|misalign|reward hacking|kill switch|oversight/i;
+
+function skimKey(s: string) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().slice(0, 64);
+}
+
 export function buildSkim(
   lead: StandingLead,
   updates: Card[],
@@ -187,20 +193,29 @@ export function buildSkim(
 ) {
   const headline = wiresKeep
     .filter((w) => w.keep)
-    .sort((a, b) => (Date.parse(b.at) || 0) - (Date.parse(a.at) || 0))[0];
-  return [
-    headline
-      ? `${headline.outlet}: ${headline.title}`
-      : updates[0]
-        ? `${updates[0].outlet}: ${updates[0].title}`
-        : "No live headline this pull.",
-    metrSecurity[0]
-      ? `METR: ${metrSecurity[0].title}`
-      : related[0]
-        ? `${related[0].outlet}: ${related[0].title}`
-        : "No governance primary this pull.",
-    also[0] ? `${also[0].outlet}: ${also[0].title}` : lead.move,
-  ];
+    .sort((a, b) => {
+      const sa = SKIM_BEAT_RE.test(a.title) ? 1 : 0;
+      const sb = SKIM_BEAT_RE.test(b.title) ? 1 : 0;
+      if (sa !== sb) return sb - sa;
+      return (Date.parse(b.at) || 0) - (Date.parse(a.at) || 0);
+    })[0];
+  const used = new Set<string>();
+  const take = (text: string) => {
+    const k = skimKey(text);
+    if (!k || used.has(k)) return null;
+    used.add(k);
+    return text;
+  };
+  const one =
+    (headline && take(`${headline.outlet}: ${headline.title}`)) ||
+    (updates[0] && take(`${updates[0].outlet}: ${updates[0].title}`)) ||
+    "No live headline this pull.";
+  const two =
+    (metrSecurity[0] && take(`METR: ${metrSecurity[0].title}`)) ||
+    (related[0] && take(`${related[0].outlet}: ${related[0].title}`)) ||
+    "No governance primary this pull.";
+  const three = also.map((c) => take(`${c.outlet}: ${c.title}`)).find(Boolean) || lead.move;
+  return [one, two, three];
 }
 
 export function leadCard(lead: StandingLead): Card {

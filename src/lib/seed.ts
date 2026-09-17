@@ -16,7 +16,6 @@ export function lastSeedEdition(): Edition {
   return {
     ...ed,
     at: LAST_SEED.at,
-    skim: LAST_SEED.skim.length ? LAST_SEED.skim : ed.skim,
     wiresKeep: LAST_SEED.wires.length ? LAST_SEED.wires : ed.wiresKeep,
     metr: LAST_SEED.metr.length ? LAST_SEED.metr : ed.metr,
     hn: LAST_SEED.hn.length ? LAST_SEED.hn : ed.hn,

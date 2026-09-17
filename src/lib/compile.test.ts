@@ -139,6 +139,31 @@ describe("compileDigest", () => {
     assert.ok(ed.rumors.every((p) => p.tag === "rumor"));
   });
 
+  it("skims an on-beat harness over a funding round", () => {
+    const ed2 = compileDigest({
+      at: "2026-09-17T20:00:00Z",
+      wires: [
+        wire({
+          id: "fund",
+          title: "Raindrop Raises $50 Million Series A For AI Agent Simulation Tools",
+          rank: "rest",
+          outlet: "HuggingNews",
+          at: "2026-09-17T19:00:00Z",
+        }),
+        wire({
+          id: "harness",
+          title: "Google Launches Gemini 3.8 Flash Agent Harness With Files and Credentials APIs",
+          rank: "rest",
+          outlet: "HuggingNews",
+          at: "2026-09-17T18:00:00Z",
+        }),
+      ],
+    });
+    assert.match(ed2.skim[0]!, /Harness/i);
+    assert.doesNotMatch(ed2.skim[0]!, /Raindrop/);
+    assert.equal(ed2.lead.id, "hf-swarm");
+  });
+
   it("edition markdown has no filing codes and skim comes from this pull", () => {
     const md = renderEdition(ed);
     const n = editionCounts(ed);
