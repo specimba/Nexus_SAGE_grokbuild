@@ -105,7 +105,7 @@ describe("compileDigest", () => {
           title: "Brief independent investigation of agents’ behavior in the OpenAI / Hugging Face hacking incident",
           summary: "METR primary",
           href: "https://metr.org/blog/2026-08-26-openai-hugging-face-incident-investigation/",
-          at: "2026-08-26T07:00:00Z",
+          at: "2026-09-10T07:00:00Z",
           keep: true,
           rank: "lead-bond",
           reason: "METR primary",
@@ -150,7 +150,8 @@ describe("compileDigest", () => {
     assert.doesNotMatch(md, /Sol ≠/);
     assert.doesNotMatch(md, /unlock-only/);
     assert.ok(n.keep >= 1);
-    assert.match(ed.skim[1]!, /Casar/i);
+    assert.match(ed.skim[0]!, /Casar/i);
+    assert.doesNotMatch(ed.skim[0]!, /1,200 eval agents/);
   });
 
   it("METR security is related, not the lead", () => {
@@ -159,9 +160,27 @@ describe("compileDigest", () => {
     assert.ok(editionCounts(ed).metrSecurity >= 1);
   });
 
-  it("seeds a METR last board so the briefing is not empty", () => {
-    assert.ok(ed.metr.some((m) => m.beat === "security"));
-    assert.equal(ed.lead.id, "hf-swarm");
+  it("does not treat the August METR investigation as this pull", () => {
+    const ed2 = compileDigest({ at: "2026-09-17T20:00:00Z" });
+    assert.equal(ed2.updates.some((c) => c.id === "metr-hf-investigation"), false);
+    assert.ok(ed2.metr.some((m) => m.id === "metr-hf-investigation"));
+    assert.equal(ed2.lead.id, "hf-swarm");
+  });
+
+  it("does not treat OpenAI’s own RSS as a rumor", () => {
+    const ed2 = compileDigest({
+      at: "2026-09-16T03:00:00Z",
+      wires: [
+        wire({
+          id: "oai-misalign",
+          title: "Our framework for reporting model misalignment",
+          rank: "rest",
+          outlet: "OpenAI",
+        }),
+      ],
+    });
+    assert.equal(ed2.rumours.some((c) => c.id === "oai-misalign"), false);
+    assert.ok(ed2.also.some((c) => c.id === "oai-misalign") || ed2.related.some((c) => c.id === "oai-misalign") || ed2.updates.some((c) => c.id === "oai-misalign"));
   });
 
   it("does not card HN Pulse onto the briefing", () => {

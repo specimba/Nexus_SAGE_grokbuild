@@ -1,8 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Desk } from "@/components/sage/desk";
+import { fetchLastPack } from "@/lib/edition";
 
-export const Route = createFileRoute("/")({ component: Home });
+export const Route = createFileRoute("/")({
+  loader: () => fetchLastPack(),
+  staleTime: 30_000,
+  component: Home,
+});
 
 function Home() {
-  return <Desk />;
+  const seed = Route.useLoaderData();
+  return <Desk seed={seed} />;
 }

@@ -4,5 +4,6 @@ node_modules/
 .env
 .env.*
 artifacts/sage/packs/
+artifacts/sage/LAST.json
 artifacts/browsed_files/
 attachments/

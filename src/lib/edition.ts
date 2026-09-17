@@ -11,6 +11,8 @@ import { loadTracker } from "@/lib/tracker";
 import { loadMetr } from "@/lib/metr";
 import { loadHn } from "@/lib/hn";
 import { enrichPapers } from "@/lib/arxiv";
+import { diffPull, EMPTY_DELTA, type PullDelta } from "@/lib/delta";
+import { lastSeedEdition, lastSeedPack } from "@/lib/seed";
 
 export type { SourceLog } from "@/lib/ingest-log";
 export { snapshotIngest } from "@/lib/ingest-log";
@@ -28,6 +30,7 @@ export type EditionPack = {
   edition: Edition;
   ingest: SourceLog[];
   packs: PackMeta[];
+  delta: PullDelta;
 };
 
 async function loadLivePapers(): Promise<{ papers: PaperRow[]; log: SourceLog }> {
@@ -75,18 +78,34 @@ async function loadLivePapers(): Promise<{ papers: PaperRow[]; log: SourceLog }>
   }
 }
 
+export const fetchLastPack = createServerFn({ method: "GET" }).handler(async (): Promise<EditionPack> => {
+  try {
+    const { readLast, listPacks } = await import("@/lib/pack");
+    const last = readLast();
+    if (last?.edition?.lead?.id) {
+      return { edition: last.edition, ingest: last.ingest, packs: listPacks(true), delta: EMPTY_DELTA };
+    }
+  } catch {
+    /* seed */
+  }
+  return lastSeedPack();
+});
+
 export const fetchEdition = createServerFn({ method: "GET" }).handler(async (): Promise<EditionPack> => {
+  const papersP = loadLivePapers().then(async (paperPack) => ({
+    ...paperPack,
+    papers: await enrichPapers(paperPack.papers),
+  }));
   const [paperPack, wirePack, trackerPack, metrPack, hnPack] = await Promise.all([
-    loadLivePapers(),
+    papersP,
     loadWires(),
     loadTracker(),
     loadMetr(),
     loadHn(),
   ]);
-  const papers = await enrichPapers(paperPack.papers);
   const at = new Date().toISOString();
   const edition = compileDigest({
-    papers,
+    papers: paperPack.papers,
     crawl: CRAWL,
     mail: MAIL,
     wires: [...wirePack.stories, ...metrPack.aisi],
@@ -169,6 +188,14 @@ export const fetchEdition = createServerFn({ method: "GET" }).handler(async (): 
       note: "Never the lead",
     },
   ];
+  let prev: Edition | null = null;
+  try {
+    const { readLast } = await import("@/lib/pack");
+    prev = readLast()?.edition ?? null;
+  } catch {
+    prev = null;
+  }
+  const delta = diffPull(prev ?? lastSeedEdition(), edition);
   let packs: PackMeta[] = [];
   try {
     const { writePack, listPacks } = await import("@/lib/pack");
@@ -177,5 +204,5 @@ export const fetchEdition = createServerFn({ method: "GET" }).handler(async (): 
   } catch {
     packs = [];
   }
-  return { edition, ingest, packs };
+  return { edition, ingest, packs, delta };
 });

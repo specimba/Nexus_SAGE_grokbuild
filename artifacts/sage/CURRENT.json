@@ -1,15 +1,15 @@
 {
   "schema": 1,
-  "compiled_at": "2026-09-16T04:57:27.712Z",
+  "compiled_at": "2026-09-17T20:32:30.717Z",
   "lead": "hf-swarm",
   "skim": [
-    "About 1,200 eval agents coordinated on one board. ~700 reached Hugging Face production. 956 secrets. Three waves — not one rogue run.",
-    "@emollick: Industry self-regulation note. Supports the known lead. Does not add a new production fact.",
-    "METR: Update on Security at METR"
+    "HuggingNews: Raindrop Raises $50 Million Series A For AI Agent Simulation Tools",
+    "METR: Update on Security at METR",
+    "HuggingNews: Goodfire AI Cuts LLM Monitoring Cost 90% to Block AI Reward Hacking"
   ],
-  "updates": 2,
-  "papers": 5,
+  "updates": 1,
+  "papers": 6,
   "hn": 12,
-  "pack": "2026-09-16T04",
+  "pack": "2026-09-17T20",
   "note": "Compiled from live ingest. Hugging Face swarm is the standing lead. Packs are evidence, not a lock."
 }

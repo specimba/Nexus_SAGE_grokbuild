@@ -29,7 +29,6 @@ import { LEAD, TRUST } from "@/data/incident";
 import { PACK_KEY } from "@/lib/digest-pack";
 import {
   briefingBeats,
-  compileDigest,
   editionCounts,
   editionStories,
   placementNote,
@@ -40,9 +39,10 @@ import {
   type PaperRow,
 } from "@/lib/compile";
 import { RANK_RULES, rankClaim } from "@/lib/rank";
-import { crawlAgeHours } from "@/lib/x-pulse";
-import { fetchEdition, type PackMeta } from "@/lib/edition";
-import { snapshotIngest, type SourceLog } from "@/lib/ingest-log";
+import { fetchEdition, fetchLastPack, type EditionPack, type PackMeta } from "@/lib/edition";
+import { type SourceLog } from "@/lib/ingest-log";
+import { type PullDelta } from "@/lib/delta";
+import { lastSeedPack } from "@/lib/seed";
 import { SOURCE_CARD } from "@/data/sources";
 import { keepWhy } from "@/lib/keep";
 import { cn } from "@/lib/cn";
@@ -79,10 +79,9 @@ function when(at: string) {
   return at ? at.slice(0, 10) : LEAD.window;
 }
 
-const EMPTY_EDITION = compileDigest({ at: new Date().toISOString().slice(0, 19) + "Z" });
-const EMPTY_INGEST = snapshotIngest();
+const SEEDED = lastSeedPack();
 
-export function Desk() {
+export function Desk({ seed = null }: { seed?: EditionPack | null }) {
   const [lane, setLane] = useState<Lane>("brief");
   useEffect(() => {
     setLane(laneFromHash());
@@ -94,32 +93,48 @@ export function Desk() {
     setLane(id);
     if (typeof window !== "undefined") window.location.hash = id;
   };
-  const [now, setNow] = useState("--:--:--");
   const [q, setQ] = useState("");
   const [cmd, setCmd] = useState(false);
   const [focus, setFocus] = useState(false);
   const [copied, setCopied] = useState(false);
   const [readPct, setReadPct] = useState(0);
-  const [edition, setEdition] = useState<Edition>(EMPTY_EDITION);
-  const [ingest, setIngest] = useState<SourceLog[]>(EMPTY_INGEST);
-  const [packs, setPacks] = useState<PackMeta[]>([]);
+  const [edition, setEdition] = useState<Edition>(seed?.edition ?? SEEDED.edition);
+  const [ingest, setIngest] = useState<SourceLog[]>(seed?.ingest?.length ? seed.ingest : SEEDED.ingest);
+  const [packs, setPacks] = useState<PackMeta[]>(seed?.packs ?? []);
+  const [delta, setDelta] = useState<PullDelta | null>(null);
   const [compiling, setCompiling] = useState(false);
   useEffect(() => {
-    const tick = () => setNow(new Date().toISOString().slice(11, 19));
-    tick();
-    const id = window.setInterval(tick, 1000);
-    return () => window.clearInterval(id);
-  }, []);
-  useEffect(() => {
-    setCompiling(true);
-    fetchEdition()
-      .then((pack) => {
-        setEdition(pack.edition);
-        setIngest(pack.ingest);
-        setPacks(pack.packs ?? []);
-      })
-      .catch(() => undefined)
-      .finally(() => setCompiling(false));
+    let cancelled = false;
+    const apply = (pack: EditionPack) => {
+      if (cancelled) return;
+      setEdition(pack.edition);
+      setIngest(pack.ingest);
+      setPacks(pack.packs ?? []);
+      if (pack.delta) setDelta(pack.delta);
+    };
+    (async () => {
+      if (!seed?.edition?.wiresKeep?.length) {
+        try {
+          const last = await fetchLastPack();
+          if (last?.edition) apply(last);
+        } catch {
+          /* seeded edition stays */
+        }
+      }
+      if (cancelled) return;
+      setCompiling(true);
+      try {
+        const pack = await fetchEdition();
+        apply(pack);
+      } catch {
+        /* keep last good edition */
+      } finally {
+        if (!cancelled) setCompiling(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
   useEffect(() => {
     const onScroll = () => {
@@ -196,21 +211,23 @@ export function Desk() {
       setEdition(pack.edition);
       setIngest(pack.ingest);
       setPacks(pack.packs ?? []);
+      if (pack.delta) setDelta(pack.delta);
       try {
         localStorage.setItem(PACK_KEY, pack.edition.at);
       } catch {
         /* ignore */
       }
     } catch {
-      setEdition(compileDigest({ at: new Date().toISOString() }));
+      /* keep the last good edition — never paint zeros */
     } finally {
       setCompiling(false);
     }
   };
 
   const counts = editionCounts(edition);
-  const xLog = ingest.find((s) => s.id === "x");
-  const feedAge = crawlAgeHours(xLog?.at ?? CRAWL_AT);
+  const liveSources = ingest.filter((s) => s.live);
+  const liveOk = liveSources.filter((s) => s.ok);
+  const compiled = edition.at.slice(11, 16);
 
   return (
     <div className={cn("desk-shell", focus && "desk-focus")}>
@@ -228,15 +245,14 @@ export function Desk() {
             <p className="font-sans text-base font-semibold text-fg">News digest</p>
           </div>
         </div>
-        <span className="hud-clock tabular-nums">{now}Z</span>
+        <span className="hud-clock tabular-nums">{compiled}Z</span>
         <span className="live-pill">
           <span className="live-dot" aria-hidden />
-          {compiling ? "Refreshing" : "Live"}
+          {compiling ? "Refreshing" : liveOk.length ? `${liveOk.length} live` : "Live"}
         </span>
-        <span className={cn("desk-chip", feedAge.stale ? "sage-stale" : "desk-chip-live")}>
-          {feedAge.stale ? `X ${feedAge.hours.toFixed(0)}h old` : "X snapshot"}
-        </span>
-        <p className="font-mono text-kicker uppercase tracking-kicker text-subtle">{LEAD.window}</p>
+        <p className="font-mono text-kicker uppercase tracking-kicker text-muted">
+          {liveSources.map((s) => `${s.label} ${s.ok ? s.count : "fail"}`).join(" · ") || "Compile to pull"}
+        </p>
         <nav className="pip-lanes" aria-label="Sections">
           {LANES.map((item, i) => {
             const Icon = ICONS[item.id];
@@ -292,7 +308,9 @@ export function Desk() {
             <Brief
               q={q}
               edition={edition}
+              ingest={ingest}
               packs={packs}
+              delta={delta}
               compiling={compiling}
               onOpenStory={(id) => {
                 try {
@@ -359,6 +377,60 @@ function TakeWhyMove({ take, why, move }: { take: string; why: string; move: str
         <p>{move}</p>
       </article>
     </div>
+  );
+}
+
+function NewPull({ delta, compiling }: { delta: PullDelta; compiling: boolean }) {
+  const n = delta.newWires.length + delta.newPapers.length;
+  if (!n && compiling) return null;
+  if (!n) {
+    return (
+      <section className="sage-panel p-4" aria-label="Since last edition">
+        <p className="font-mono text-kicker uppercase tracking-kicker text-subtle">Since last edition</p>
+        <p className="mt-2 text-sm text-muted">No new kept headlines. The 90-second skim is still the last live wire.</p>
+      </section>
+    );
+  }
+  return (
+    <section className="sage-panel p-4 md:p-5" aria-label="New since last edition">
+      <p className="font-mono text-kicker uppercase tracking-kicker text-ok">New since last edition</p>
+      <h2 className="mt-1 font-sans text-xl font-semibold">
+        {delta.newWires.length ? `${delta.newWires.length} new kept ${delta.newWires.length === 1 ? "headline" : "headlines"}` : "New papers"}
+        {delta.goneWires ? ` · ${delta.goneWires} dropped` : ""}
+      </h2>
+      {delta.newWires.length ? (
+        <ul className="mt-3 grid gap-2">
+          {delta.newWires.map((w) => (
+            <li key={w.href || w.title} className="wire-row">
+              <span className="font-mono text-kicker uppercase tracking-kicker text-subtle">{w.outlet}</span>
+              {w.href ? (
+                <a href={w.href} target="_blank" rel="noreferrer">
+                  {w.title}
+                </a>
+              ) : (
+                <span className="font-sans text-sm font-semibold leading-snug">{w.title}</span>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {delta.newPapers.length ? (
+        <ul className="mt-3 grid gap-2">
+          {delta.newPapers.map((p) => (
+            <li key={p.id} className="wire-row">
+              <span className="font-mono text-kicker uppercase tracking-kicker text-subtle">{p.id}</span>
+              {p.href ? (
+                <a href={p.href} target="_blank" rel="noreferrer">
+                  {p.title}
+                </a>
+              ) : (
+                <span className="font-sans text-sm font-semibold leading-snug">{p.title}</span>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
   );
 }
 
@@ -472,7 +544,9 @@ function hit(q: string, ...parts: string[]) {
 function Brief({
   q = "",
   edition,
+  ingest,
   packs,
+  delta,
   compiling,
   onOpenStory,
   onListen,
@@ -481,7 +555,9 @@ function Brief({
 }: {
   q?: string;
   edition: Edition;
+  ingest: SourceLog[];
   packs: PackMeta[];
+  delta: PullDelta | null;
   compiling: boolean;
   onOpenStory: (id: string) => void;
   onListen: () => void;
@@ -493,7 +569,7 @@ function Brief({
   const related = edition.related.filter((c) => hit(q, c.title, c.take, c.outlet));
   const also = edition.also.filter((c) => hit(q, c.title, c.take, c.outlet));
   const rumours = edition.rumours.filter((c) => hit(q, c.title, c.take, c.outlet));
-  const featuredUpdate = updates[0];
+  const featuredUpdate = updates.find((c) => c.live) ?? null;
   const featuredRelated = related.find((c) => /metr/i.test(c.outlet) && /security/i.test(c.title)) ?? related[0];
   const used = new Set([featuredUpdate?.id, featuredRelated?.id].filter(Boolean) as string[]);
   const rest = [...updates, ...related, ...also].filter((c) => !used.has(c.id)).slice(0, 8);
@@ -501,55 +577,26 @@ function Brief({
   const wires = edition.wiresKeep.filter((w) => hit(q, w.title, w.summary, w.outlet));
   return (
     <div className="grid gap-5">
+      <ol className="source-row" aria-label="Live ingest">
+        {ingest
+          .filter((s) => s.live)
+          .map((s) => (
+            <li key={s.id} className={cn("source-card", sourceTone(s))}>
+              <span className="font-mono text-kicker uppercase tracking-kicker">
+                {s.label} · Live
+              </span>
+              <strong>{s.ok ? s.count : "failed"}</strong>
+              <span>{s.note}</span>
+            </li>
+          ))}
+      </ol>
+      {delta ? <NewPull delta={delta} compiling={compiling} /> : null}
       <Skim lines={edition.skim} bottom={edition.bottomLine} />
-      <section className="story-hero sage-lead-frame">
-        <img src="/wave-hud.jpg" alt="" className="story-hero-bg" crossOrigin="anonymous" />
-        <div className="story-hero-body">
-          <p className="font-mono text-kicker uppercase tracking-kicker text-cyan">
-            Lead · standing incident · {lead.window} · {readMinutes(lead.take, lead.why, lead.move)} min
-          </p>
-          <h1 className="story-mast mt-3">{lead.title}</h1>
-          <ul className="stat-row mt-5">
-            {lead.stats.map((s) => (
-              <li key={s.label} className="stat-tile">
-                <p className="stat-n">{s.n}</p>
-                <p className="stat-l">{s.label}</p>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-5">
-            <TakeWhyMove take={lead.take} why={lead.why} move={lead.move} />
-          </div>
-          <ol className="chrono mt-6" aria-label="How the swarm grew">
-            {lead.timeline.map((t) => (
-              <li key={t.date}>
-                <i aria-hidden />
-                <span>{t.date}</span>
-                <strong>{t.what}</strong>
-              </li>
-            ))}
-          </ol>
-          <div className="mt-6 flex flex-wrap gap-2">
-            <button type="button" className="desk-lane-btn desk-cta" onClick={() => onOpenStory(lead.id)}>
-              Read the full story
-            </button>
-            <button type="button" className="desk-lane-btn" onClick={onListen}>
-              <Volume2 size={14} aria-hidden /> Read aloud
-            </button>
-            {lead.refs.slice(0, 2).map((r) => (
-              <a key={r.href} href={r.href} target="_blank" rel="noreferrer" className="desk-lane-btn">
-                <ExternalLink size={14} aria-hidden /> {r.label}
-              </a>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section>
         <p className="font-mono text-kicker uppercase tracking-kicker text-amber">This pull · ranked from ingest</p>
-        <h2 className="mt-1 font-sans text-xl font-semibold">What the sources actually sent</h2>
+        <h2 className="mt-1 font-sans text-xl font-semibold">What the sources sent</h2>
         <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted">
-          Updates, related, and also are compiled from METR, the live wire, papers, the tracker, and the X/mail snapshots. They are not a frozen magazine.
+          Live METR, wire, papers, tracker, HN. X and mail are snapshots and cannot take the front.
         </p>
         {featuredUpdate || featuredRelated ? (
           <div className="brief-pair mt-4">
@@ -670,6 +717,25 @@ function Brief({
         )}
       </section>
 
+      <section className="sage-panel p-4 md:p-5">
+        <p className="font-mono text-kicker uppercase tracking-kicker text-subtle">Standing lead · May–Jul 2026 · not this pull</p>
+        <h2 className="mt-2 font-sans text-xl font-semibold leading-snug">{lead.title}</h2>
+        <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted">{lead.take}</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button type="button" className="desk-lane-btn desk-cta" onClick={() => onOpenStory(lead.id)}>
+            Full story
+          </button>
+          <button type="button" className="desk-lane-btn" onClick={onListen}>
+            <Volume2 size={14} aria-hidden /> Read aloud
+          </button>
+          {lead.refs.slice(0, 2).map((r) => (
+            <a key={r.href} href={r.href} target="_blank" rel="noreferrer" className="desk-lane-btn">
+              <ExternalLink size={14} aria-hidden /> {r.label}
+            </a>
+          ))}
+        </div>
+      </section>
+
       <SavedEditions packs={packs} currentAt={edition.at} />
     </div>
   );
@@ -691,7 +757,7 @@ function SavedEditions({ packs, currentAt }: { packs: PackMeta[]; currentAt: str
               <p className="font-mono text-kicker uppercase tracking-kicker text-subtle">
                 {p.at.slice(0, 16).replace("T", " ")}Z{p.id === currentAt.slice(0, 13).replace(/[^\dT-]/g, "") ? " · this pull" : ""}
               </p>
-              <p className="mt-1 font-sans text-sm font-semibold leading-snug">{p.skim[1] || p.skim[0] || p.id}</p>
+              <p className="mt-1 font-sans text-sm font-semibold leading-snug">{p.skim[0] || p.skim[1] || p.id}</p>
               <p className="mt-1 font-mono text-kicker uppercase tracking-kicker text-subtle">
                 {p.updates} updates · {p.papers} papers
               </p>

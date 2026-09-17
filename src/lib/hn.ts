@@ -92,7 +92,7 @@ export function mapHnHits(raw: AlgoliaHit[], query = ""): HnHit[] {
 async function search(query: string): Promise<HnHit[]> {
   const r = await fetch(hnSearchUrl(query), {
     headers: { Accept: "application/json", "User-Agent": UA },
-    signal: AbortSignal.timeout(7000),
+    signal: AbortSignal.timeout(5000),
   });
   if (!r.ok) return [];
   const body = (await r.json()) as { hits?: AlgoliaHit[] };

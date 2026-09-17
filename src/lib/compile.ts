@@ -112,17 +112,22 @@ function newer(a: Card, b: Card) {
 
 const EVAL_DESKS = new Set(["Redwood", "Alignment Forum", "AI Snake Oil", "Transformer", "UK AISI", "Import AI", "Epoch", "Zvi"]);
 const SECURITY_DESKS = new Set(["Trail of Bits", "Fox-IT", "Hugging Face", "Project Zero"]);
-const DESK_BUMP = new Set([...EVAL_DESKS, ...SECURITY_DESKS]);
+const PRIMARY_DESKS = new Set(["OpenAI", "METR", "Hugging Face"]);
+const DESK_BUMP = new Set([...EVAL_DESKS, ...SECURITY_DESKS, ...PRIMARY_DESKS]);
 
 function fromWires(wires: WireStory[], live: boolean): Card[] {
   return wires
     .filter((w) => w.keep)
     .map((w) => {
-      const verdict = w.outlet === "METR" ? { rank: w.rank as Rank | PulseTag, reason: w.reason } : rankClaim(w.title);
+      const verdict0 = w.outlet === "METR" ? { rank: w.rank as Rank | PulseTag, reason: w.reason } : rankClaim(w.title);
+      let verdict = verdict0;
       let kind = kindOf(verdict.rank);
       if (kind === "noise") return null;
       if (kind === "rumor" && DESK_BUMP.has(w.outlet)) {
         kind = "also";
+        if (PRIMARY_DESKS.has(w.outlet)) {
+          verdict = { rank: verdict.rank, reason: `${w.outlet} primary. Not a replacement for the lead.` };
+        }
       }
       if (kind === "also" && w.outlet === "HuggingNews" && /does not outrank/i.test(verdict.reason)) return null;
       return stamp(w.id, kind, w.title, w.summary || w.title, verdict.reason, w.outlet, w.href, w.at, live);
@@ -165,15 +170,36 @@ function fromHn(_hits: HnHit[]): Card[] {
   return [];
 }
 
-export function buildSkim(lead: StandingLead, updates: Card[], related: Card[], metrSecurity: WireStory[]) {
+const UPDATE_FRESH_MS = 14 * 24 * 60 * 60 * 1000;
+
+function young(at: string, now: number) {
+  const t = Date.parse(at);
+  return !Number.isFinite(t) || now - t <= UPDATE_FRESH_MS;
+}
+
+export function buildSkim(
+  lead: StandingLead,
+  updates: Card[],
+  related: Card[],
+  metrSecurity: WireStory[],
+  also: Card[] = [],
+  wiresKeep: WireStory[] = [],
+) {
+  const headline = wiresKeep
+    .filter((w) => w.keep)
+    .sort((a, b) => (Date.parse(b.at) || 0) - (Date.parse(a.at) || 0))[0];
   return [
-    lead.take,
-    updates[0] ? `${updates[0].outlet}: ${updates[0].title}` : "No new update on the lead this pull.",
+    headline
+      ? `${headline.outlet}: ${headline.title}`
+      : updates[0]
+        ? `${updates[0].outlet}: ${updates[0].title}`
+        : "No live headline this pull.",
     metrSecurity[0]
       ? `METR: ${metrSecurity[0].title}`
       : related[0]
         ? `${related[0].outlet}: ${related[0].title}`
         : "No governance primary this pull.",
+    also[0] ? `${also[0].outlet}: ${also[0].title}` : lead.move,
   ];
 }
 
@@ -209,16 +235,20 @@ export function compileDigest(input?: {
   const metr = sortMetr(metrSrc.filter((m) => m.keep));
   const liveWires = input?.liveWires ?? wires.length > 0;
 
-  const cards = dedupe([
-    ...fromWires(metr, true),
-    ...fromWires(wires, liveWires),
-    ...fromCrawl(crawl),
-    ...fromMail(mail),
-    ...fromTracker(tracker),
-    ...fromHn(hn),
-  ]).sort(newer);
-
-  const updates = cards.filter((c) => c.kind === "update").slice(0, 6);
+  const now = Date.parse(input?.at ?? "") || Date.now();
+  const cards = dedupe(
+    [
+      ...fromWires(metr, true),
+      ...fromWires(wires, liveWires),
+      ...fromCrawl(crawl),
+      ...fromMail(mail),
+      ...fromTracker(tracker),
+      ...fromHn(hn),
+    ].filter((c) => c.kind !== "update" || young(c.at, now)),
+  ).sort(newer);
+  const liveUpdates = cards.filter((c) => c.kind === "update" && c.live && young(c.at, now));
+  const snapUpdates = cards.filter((c) => c.kind === "update" && !c.live && young(c.at, now));
+  const updates = [...liveUpdates, ...snapUpdates].slice(0, 6);
   const relatedRaw = cards.filter((c) => c.kind === "related");
   const related = [
     ...relatedRaw.filter((c) => /metr/i.test(c.outlet)),
@@ -227,11 +257,12 @@ export function compileDigest(input?: {
   const also = cards.filter((c) => c.kind === "also").slice(0, 8);
   const rumours = cards.filter((c) => c.kind === "rumor").slice(0, 4);
   const security = splitMetr(metr).security;
+  const wiresKeep = wires.filter((w) => w.keep);
 
   return {
     at: input?.at ?? new Date().toISOString(),
     lead: LEAD,
-    skim: buildSkim(LEAD, updates, related, security),
+    skim: buildSkim(LEAD, updates, related, security, also, wiresKeep),
     bottomLine: BOTTOM_LINE,
     updates,
     related,
@@ -242,7 +273,7 @@ export function compileDigest(input?: {
     confirmed: crawl.filter((p) => p.tag !== "rumor"),
     rumors: crawl.filter((p) => p.tag === "rumor"),
     mail,
-    wiresKeep: wires.filter((w) => w.keep),
+    wiresKeep,
     wiresShelf: wires.filter((w) => !w.keep),
     tracker,
     metr,

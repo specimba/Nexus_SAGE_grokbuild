@@ -29,7 +29,7 @@ const FEEDS: { name: string; url: string; kind: "atom" | "rss"; titlesOnly?: boo
   { name: "AI Snake Oil", url: "https://www.aisnakeoil.com/feed", kind: "rss" },
   { name: "Import AI", url: "https://jack-clark.net/feed/", kind: "rss" },
   { name: "Epoch", url: "https://epochai.substack.com/feed", kind: "rss", titlesOnly: true },
-  { name: "Zvi", url: "https://thezvi.substack.com/feed", kind: "rss", titlesOnly: true, timeout: 12000 },
+  { name: "Zvi", url: "https://thezvi.substack.com/feed", kind: "rss", titlesOnly: true, timeout: 5000 },
   { name: "OpenAI", url: "https://openai.com/news/rss.xml", kind: "rss", titlesOnly: true },
   { name: "Trail of Bits", url: "https://blog.trailofbits.com/feed/", kind: "rss", max: 12 },
   { name: "Fox-IT", url: "https://blog.fox-it.com/feed/", kind: "rss", max: 8, timeout: 8000 },
@@ -158,7 +158,7 @@ async function fetchFeed(feed: (typeof FEEDS)[number]): Promise<{ stories: WireS
   try {
     const r = await fetch(feed.url, {
       headers: { Accept: "application/atom+xml, application/rss+xml, application/xml, text/xml", "User-Agent": "NEXUS-SAGE-desk/0.2 (free-ingest)" },
-      signal: AbortSignal.timeout(feed.timeout ?? 8000),
+      signal: AbortSignal.timeout(feed.timeout ?? 5000),
     });
     const ms = Date.now() - t0;
     if (!r.ok) return { stories: [], ok: false, ms };

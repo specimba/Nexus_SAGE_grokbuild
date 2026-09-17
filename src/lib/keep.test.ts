@@ -18,6 +18,9 @@ describe("keepPaper", () => {
   it("keeps a computer-use threat paper", () => {
     assert.equal(keepPaper("2609.15134", "HazardAuditor: From Executable Threats to Safer Computer-Use Agents"), true);
   });
+  it("shelves transmodal retrieval even if the board is hot", () => {
+    assert.equal(keepPaper("2609.16591", "FLAT: Resampling Image and Text into 1D Flexible-Length Aligned Transmodal Tokens for Retrieval and Generation"), false);
+  });
 });
 
 describe("keepWire", () => {

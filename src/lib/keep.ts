@@ -17,14 +17,14 @@ export const KEEP_IDS = new Set([
   "2609.15309",
 ]);
 
-export const KEEP_RE = /agent|eval|harness|sandbox|schem|multi-agent|planning|bench|cyber|secur|backdoor|threat/i;
+export const KEEP_RE = /agent|harness|sandbox|schem|multi-agent|planning|bench|\beval|cyber|secur|backdoor|threat/i;
 
 /** Hype and off-beat titles that match /agent/ but are not this desk. */
 export const SHELF_RE =
-  /atria dawn|superintelligence|speech recognizer|world modeling|video generation|physical foundation|3d generator|panoramic states/i;
+  /atria dawn|superintelligence|speech recognizer|world modeling|video generation|physical foundation|3d generator|panoramic states|transmodal|visual generation|music technical|audio 3 gen|realtime technical/i;
 
 export function keepPaper(id: string, title: string) {
-  if (SHELF_RE.test(title) && !/sandbox|eval|harness|secur|cyber|backdoor|threat/i.test(title)) return false;
+  if (SHELF_RE.test(title) && !/sandbox|\beval|secur|cyber|backdoor|threat/i.test(title)) return false;
   return KEEP_IDS.has(id) || KEEP_RE.test(title);
 }
 
